@@ -145,6 +145,16 @@ export class Agent {
     this.#state = 'idle';
   }
 
+  /**
+   * Resolves once every queued turn has finished. Messages still inside the debounce
+   * window are not waited for; use `debounceMs: 0` in tests.
+   */
+  async idle(): Promise<void> {
+    while (this.#queues.size > 0) {
+      await Promise.allSettled([...this.#queues.values()]);
+    }
+  }
+
   async #receive(message: InboundMessage): Promise<void> {
     if (this.#state !== 'running') return;
     this.#emit({ type: 'message.received', message });

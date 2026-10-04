@@ -40,7 +40,7 @@ await agent.start();
 | Package | Status |
 | --- | --- |
 | `@textagent/core` | Agent, channel interface, stores |
-| `@textagent/imessage` | Reader done; sender in progress. macOS only |
+| `@textagent/imessage` | Works, untested on a live Mac yet. macOS only |
 | `@textagent/whatsapp` | Planned (WhatsApp Cloud API) |
 | `@textagent/telegram` | Planned (Bot API) |
 | `@textagent/email` | Planned (IMAP/SMTP) |

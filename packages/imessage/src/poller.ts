@@ -20,6 +20,8 @@ export class ChatDbPoller {
   readonly #opts: Required<ChatDbPollerOptions>;
   #timer: NodeJS.Timeout | undefined;
   #running: Promise<void> | undefined;
+  /** Tail of the poll chain: polls never overlap, so the cursor only moves forward. */
+  #polling: Promise<void> = Promise.resolve();
   #stopped = true;
 
   constructor(options: ChatDbPollerOptions) {
@@ -43,8 +45,14 @@ export class ChatDbPoller {
     await this.#running;
   }
 
-  /** Read and deliver everything new right now. Exposed for tests and `doctor`. */
-  async poll(): Promise<void> {
+  /** Read and deliver everything new right now, after any poll already in progress. */
+  poll(): Promise<void> {
+    const next = this.#polling.then(() => this.#pollOnce());
+    this.#polling = next.catch(() => {});
+    return next;
+  }
+
+  async #pollOnce(): Promise<void> {
     const { reader, state, onMessage, batchSize } = this.#opts;
     let cursor = Number((await state.get(CURSOR_KEY)) ?? 0);
 

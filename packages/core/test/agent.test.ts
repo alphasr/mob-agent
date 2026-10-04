@@ -288,4 +288,20 @@ describe('Agent', () => {
       ['markSeen', 'appendHistory', 'appendHistory'],
     );
   });
+
+  it('idle() waits for queued turns to finish', async () => {
+    const { channel, agent } = setup();
+    let done = 0;
+    agent.on('message', async () => {
+      await sleep(20);
+      done++;
+    });
+    await agent.start();
+    await channel.deliver('a');
+    await channel.deliver('b', { thread: 't2' });
+    assert.equal(done, 0, 'receive() returns before the handler runs');
+    await agent.idle();
+    assert.equal(done, 2);
+    await agent.stop();
+  });
 });

@@ -1,5 +1,10 @@
 export { decodeAttributedBody } from './attributed-body.ts';
+export { IMessageChannel, imessage } from './channel.ts';
+export type { IMessageOptions } from './channel.ts';
+export { EchoGuard } from './echo-guard.ts';
 export { ChatDbPoller } from './poller.ts';
 export type { ChatDbPollerOptions } from './poller.ts';
 export { ChatDbReader, DEFAULT_CHAT_DB, FullDiskAccessError, appleDate } from './reader.ts';
 export type { IMessageRaw, ReadResult, SkipReason } from './reader.ts';
+export { AutomationPermissionError, SendError, appleScriptSender, dmRecipient, osascriptArgs } from './sender.ts';
+export type { IMessageSender } from './sender.ts';
