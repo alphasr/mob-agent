@@ -1,0 +1,43 @@
+{
+  "name": "@textagent/core",
+  "version": "0.1.0",
+  "description": "Unified API for building AI agents that live in iMessage, WhatsApp, Telegram and email.",
+  "keywords": [
+    "ai",
+    "agent",
+    "chatbot",
+    "imessage",
+    "whatsapp",
+    "telegram",
+    "email",
+    "messaging"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alphasr/textagent.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/alphasr/textagent/tree/main/packages/core#readme",
+  "bugs": "https://github.com/alphasr/textagent/issues",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "node --test test/*.test.ts"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

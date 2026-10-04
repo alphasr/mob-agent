@@ -1,0 +1,46 @@
+{
+  "name": "@textagent/imessage",
+  "version": "0.1.0",
+  "description": "iMessage channel for textagent. Runs on a Mac signed into Messages.",
+  "keywords": [
+    "ai",
+    "agent",
+    "imessage",
+    "macos",
+    "chatbot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alphasr/textagent.git",
+    "directory": "packages/imessage"
+  },
+  "homepage": "https://github.com/alphasr/textagent/tree/main/packages/imessage#readme",
+  "bugs": "https://github.com/alphasr/textagent/issues",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@textagent/core": "0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

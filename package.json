@@ -1,0 +1,20 @@
+{
+  "name": "textagent",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -b packages/*",
+    "test": "npm test --workspaces --if-present",
+    "typecheck": "tsc -b packages/* --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "typescript": "latest"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
