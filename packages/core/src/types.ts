@@ -42,6 +42,27 @@ export interface OutboundMessage {
   text: string;
   /** The message being answered. Email uses it for In-Reply-To/References headers. */
   replyTo?: InboundMessage;
+  /** Recipient when there is no `replyTo` (a proactive message); email needs it to address the mail. */
+  to?: string;
+}
+
+/** A message that starts a new conversation. */
+export interface NewMessage {
+  /** Phone number, email address, Telegram chat id, WhatsApp number (digits only). */
+  to: string;
+  text?: string;
+  /** Email only, required there. */
+  subject?: string;
+  /** WhatsApp only: a pre-approved template, required outside the 24-hour window. */
+  template?: MessageTemplate;
+}
+
+export interface MessageTemplate {
+  name: string;
+  /** e.g. "en_US" */
+  language: string;
+  /** Values for the template body's {{1}}, {{2}}, ... */
+  params?: string[];
 }
 
 export interface SentMessage {
@@ -55,8 +76,6 @@ export interface ChannelCapabilities {
   maxTextLength?: number;
   typingIndicator: boolean;
   groups: boolean;
-  /** Can the agent message someone who hasn't messaged it first? (Telegram: no.) */
-  canInitiate: boolean;
 }
 
 /** What the agent hands a channel when starting it. */
@@ -86,4 +105,21 @@ export interface Channel {
   stop(): Promise<void>;
   send(message: OutboundMessage): Promise<SentMessage>;
   sendTyping?(thread: Thread): Promise<void>;
+  /** Start a conversation. Channels that can't (or not yet) leave it out; `agent.send` explains. */
+  sendNew?(message: NewMessage): Promise<{ sent: SentMessage; thread: Thread }>;
+  /**
+   * Verify credentials and permissions without sending anything; used by `textagent doctor`.
+   * Must be callable without start() and must only read.
+   */
+  check?(): Promise<CheckResult[]>;
+}
+
+export interface CheckResult {
+  /** What was checked, e.g. "Bot token". */
+  name: string;
+  ok: boolean;
+  /** What was found, e.g. "@acme_bot" or the error. */
+  detail?: string;
+  /** What to do about a failure. */
+  fix?: string;
 }

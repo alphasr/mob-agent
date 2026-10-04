@@ -1,0 +1,27 @@
+name: Release
+
+# Publishing a GitHub release publishes every package to npm.
+# Uses npm trusted publishing (OIDC): add this repo + workflow as a trusted publisher
+# for each @textagent package on npmjs.com. No npm token is stored in GitHub.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@latest
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - run: npm publish --workspaces --access public

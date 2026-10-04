@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { spawn } from 'node:child_process';
 import { after, describe, it } from 'node:test';
 import { MemoryStore, SqliteStore } from '../src/index.ts';
 import type { HistoryEntry, Store } from '../src/index.ts';
@@ -81,4 +82,20 @@ describe('SqliteStore on disk', () => {
     await store.close();
     await store.close();
   });
+
+  it('opens safely when several processes start at the same moment', async () => {
+    const path = join(dir, 'concurrent.sqlite');
+    const storeUrl = new URL('../src/store.ts', import.meta.url).href;
+    const script = `import { SqliteStore } from ${JSON.stringify(storeUrl)}; const s = new SqliteStore(${JSON.stringify(path)}); await s.markSeen('c', String(process.pid)); await s.close();`;
+    const codes = await Promise.all(
+      Array.from({ length: 4 }, () =>
+        new Promise<number | null>((resolve) => {
+          const child = spawn(process.execPath, ['--input-type=module', '-e', script], { stdio: 'ignore' });
+          child.on('exit', resolve);
+        }),
+      ),
+    );
+    assert.deepEqual(codes, [0, 0, 0, 0], 'no "database is locked"');
+  });
 });
+

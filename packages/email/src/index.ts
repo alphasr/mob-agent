@@ -1,0 +1,10 @@
+export { EmailChannel, email, gmail } from './channel.ts';
+export type { EmailOptions, SmtpOptions } from './channel.ts';
+export { authResults, automatedReason } from './headers.ts';
+export type { AuthResult, AuthResults, AutomatedReason } from './headers.ts';
+export { ImapSource } from './imap.ts';
+export type { ImapClient, ImapOptions, MailSource, MailSourceContext } from './imap.ts';
+export { normalizeEmail } from './normalize.ts';
+export type { EmailRaw, EmailSkipReason, NormalizeResult } from './normalize.ts';
+export { stripQuoted } from './quote.ts';
+export { replyReferences, replySubject, threadRoot } from './threading.ts';

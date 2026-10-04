@@ -5,6 +5,13 @@
 Build AI agents that people text, instead of apps they have to install.
 Write your agent once; textagent runs it over **iMessage, WhatsApp, Telegram and email**.
 
+```sh
+npm create textagent
+```
+
+Pick Telegram and the Echo template, paste a bot token from @BotFather, run `npm run dev`, and text your bot.
+`npm run doctor` checks credentials and permissions if anything is off.
+
 ```ts
 import { Agent, SqliteStore } from '@textagent/core';
 
@@ -37,14 +44,15 @@ await agent.start();
 
 ## Packages
 
-| Package | Status |
-| --- | --- |
-| `@textagent/core` | Agent, channel interface, stores |
-| `@textagent/imessage` | Works, untested on a live Mac yet. macOS only |
-| `@textagent/whatsapp` | Planned (WhatsApp Cloud API) |
-| `@textagent/telegram` | Planned (Bot API) |
-| `@textagent/email` | Planned (IMAP/SMTP) |
-| `textagent` CLI | Planned: `create`, `dev`, `doctor` |
+| Package               | Status                                                             |
+| --------------------- | ------------------------------------------------------------------ |
+| `@textagent/core`     | Agent, channel interface, stores                                   |
+| `@textagent/imessage` | Works, untested on a live Mac yet. macOS only                      |
+| `@textagent/whatsapp` | Works (Cloud API webhooks, signature-verified)                     |
+| `@textagent/telegram` | Works (Bot API, long polling)                                      |
+| `@textagent/email`    | Works (IMAP + SMTP; Gmail helper)                                  |
+| `@textagent/webhook`  | Works: turns POSTed to your server (any language), signed replies  |
+| `textagent` CLI       | Works: `npm create textagent`, `textagent dev`, `textagent doctor` |
 
 ## Writing a channel
 
@@ -61,6 +69,10 @@ npm install
 npm run build
 npm test
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Security reports: [SECURITY.md](SECURITY.md).
 
 ## License
 

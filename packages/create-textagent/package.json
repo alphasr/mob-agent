@@ -1,0 +1,39 @@
+{
+  "name": "create-textagent",
+  "version": "0.1.0",
+  "description": "npm create textagent: scaffold an agent people can text on iMessage, WhatsApp, Telegram and email.",
+  "keywords": [
+    "create",
+    "textagent",
+    "ai",
+    "agent",
+    "chatbot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alphasr/textagent.git",
+    "directory": "packages/create-textagent"
+  },
+  "homepage": "https://github.com/alphasr/textagent#readme",
+  "bugs": "https://github.com/alphasr/textagent/issues",
+  "type": "module",
+  "bin": {
+    "create-textagent": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "textagent": "0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

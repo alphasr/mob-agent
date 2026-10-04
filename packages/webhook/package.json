@@ -1,0 +1,46 @@
+{
+  "name": "@textagent/webhook",
+  "version": "0.1.0",
+  "description": "Run textagent agents from any language: turns are POSTed to your server, which replies through a signed API.",
+  "keywords": [
+    "ai",
+    "agent",
+    "webhook",
+    "chatbot",
+    "imessage",
+    "whatsapp",
+    "telegram",
+    "email"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alphasr/textagent.git",
+    "directory": "packages/webhook"
+  },
+  "homepage": "https://github.com/alphasr/textagent/tree/main/packages/webhook#readme",
+  "bugs": "https://github.com/alphasr/textagent/issues",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@textagent/core": "0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

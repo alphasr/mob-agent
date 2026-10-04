@@ -58,6 +58,19 @@ export function dmRecipient(thread: Thread): string | undefined {
   return parts.length === 2 ? parts[1] : undefined;
 }
 
+/**
+ * Ask Messages for its name: harmless, but needs the same Automation permission as sending.
+ * The first run shows macOS's "allow control of Messages" prompt. Returns the problem, if any.
+ */
+export function probeAutomation(): Promise<Error | undefined> {
+  return new Promise((resolve) => {
+    execFile('osascript', ['-e', 'tell application "Messages" to get name'], { timeout: 15_000 }, (error, _out, stderr) => {
+      if (!error) return resolve(undefined);
+      resolve(/-1743/.test(stderr) ? new AutomationPermissionError({ cause: error }) : new SendError(stderr.trim() || error.message, undefined));
+    });
+  });
+}
+
 export const appleScriptSender: IMessageSender = (thread, text) =>
   new Promise((resolve, reject) => {
     execFile('osascript', osascriptArgs(thread, text), { timeout: 15_000 }, (error, _stdout, stderr) => {

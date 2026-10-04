@@ -1,5 +1,5 @@
 {
-  "name": "textagent",
+  "name": "textagent-monorepo",
   "private": true,
   "type": "module",
   "workspaces": [

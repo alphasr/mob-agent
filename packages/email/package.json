@@ -1,0 +1,51 @@
+{
+  "name": "@textagent/email",
+  "version": "0.1.0",
+  "description": "Email channel for textagent: any IMAP/SMTP mailbox (Gmail, Outlook, Fastmail, ...).",
+  "keywords": [
+    "ai",
+    "agent",
+    "email",
+    "imap",
+    "smtp",
+    "chatbot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alphasr/textagent.git",
+    "directory": "packages/email"
+  },
+  "homepage": "https://github.com/alphasr/textagent/tree/main/packages/email#readme",
+  "bugs": "https://github.com/alphasr/textagent/issues",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@textagent/core": "0.1.0",
+    "imapflow": "^2.2.5",
+    "mailparser": "^3.9.35",
+    "nodemailer": "^10.0.14"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/mailparser": "^3.9.0",
+    "@types/nodemailer": "^8.0.2"
+  }
+}

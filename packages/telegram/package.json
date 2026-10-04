@@ -1,0 +1,43 @@
+{
+  "name": "@textagent/telegram",
+  "version": "0.1.0",
+  "description": "Telegram channel for textagent, using the official Bot API.",
+  "keywords": [
+    "ai",
+    "agent",
+    "telegram",
+    "bot",
+    "chatbot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alphasr/textagent.git",
+    "directory": "packages/telegram"
+  },
+  "homepage": "https://github.com/alphasr/textagent/tree/main/packages/telegram#readme",
+  "bugs": "https://github.com/alphasr/textagent/issues",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@textagent/core": "0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

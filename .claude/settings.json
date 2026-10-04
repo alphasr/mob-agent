@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Bash(git push*)",
+      "Bash(git commit*)",
+      "Bash(git add*)",
+      "Read(~/.ssh/**)",
+      "Read(~/.config/gcloud/**)",
+      "Read(~/.config/configstore/**)",
+      "Read(//**/.env.local)",
+      "Read(//**/sandbox.secrets.sh)"
+    ],
+    "allow": [
+      "Bash(npm run type-check*)",
+      "Bash(npm run build*)",
+      "Bash(npx eslint*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)"
+    ],
+    "disableBypassPermissionsMode": "disable"
+  },
+  "disableClaudeAiConnectors": true,
+  "sandbox": {
+    "network": {
+      "allowLocalBinding": true,
+      "allowedDomains": [
+        "registry.npmjs.org",
+        "*.npmjs.org",
+        "github.com",
+        "*.github.com",
+        "raw.githubusercontent.com",
+        "objects.githubusercontent.com",
+        "codeload.githubusercontent.com",
+        "*.googleapis.com",
+        "accounts.google.com",
+        "oauth2.googleapis.com",
+        "registry-1.docker.io",
+        "auth.docker.io",
+        "production.cloudflare.docker.com",
+        "api.anthropic.com",
+        "api.openai.com",
+        "*.channex.io",
+        "channex.io"
+      ]
+    },
+    "credentials": {
+      "files": [
+        {
+          "path": "~/.ssh",
+          "mode": "deny"
+        },
+        {
+          "path": "~/.config/gcloud",
+          "mode": "deny"
+        },
+        {
+          "path": "~/.config/configstore",
+          "mode": "deny"
+        },
+        {
+          "path": "~/Library/Keychains",
+          "mode": "deny"
+        },
+        {
+          "path": "~/.npmrc",
+          "mode": "deny"
+        },
+        {
+          "path": "~/.aws",
+          "mode": "deny"
+        }
+      ],
+      "envVars": [
+        {
+          "name": "OPENAI_API_KEY",
+          "mode": "deny"
+        },
+        {
+          "name": "ANTHROPIC_API_KEY",
+          "mode": "deny"
+        },
+        {
+          "name": "GEMINI_API_KEY",
+          "mode": "deny"
+        },
+        {
+          "name": "PERPLEXITY_API_KEY",
+          "mode": "deny"
+        }
+      ]
+    }
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' | { read -r f; [[ \"$f\" =~ \\.(js|jsx|ts|tsx|mjs)$ ]] && npx eslint --fix \"$f\" 2>/dev/null; [[ \"$f\" =~ \\.(js|jsx|ts|tsx|mjs|css|md|json)$ ]] && npx prettier --write \"$f\" 2>/dev/null; } || true",
+            "statusMessage": "Linting & formatting..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '^git (add|commit|restore|clean|pull|merge|rebase|stash)( |$)|^git reset.*--hard|^git checkout( --| \\.)|^git push.*(-f |--force)|^git branch.*(-d|-D)|^git tag'; then echo '{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"Blocked by project policy: dangerous git command. Run git operations manually in the terminal.\"}}'; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

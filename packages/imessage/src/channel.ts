@@ -1,9 +1,18 @@
 import { randomUUID } from 'node:crypto';
-import type { Channel, ChannelCapabilities, ChannelContext, OutboundMessage, SentMessage } from '@textagent/core';
+import type {
+  Channel,
+  ChannelCapabilities,
+  ChannelContext,
+  CheckResult,
+  NewMessage,
+  OutboundMessage,
+  SentMessage,
+  Thread,
+} from '@textagent/core';
 import { EchoGuard } from './echo-guard.ts';
 import { ChatDbPoller } from './poller.ts';
 import { ChatDbReader, DEFAULT_CHAT_DB } from './reader.ts';
-import { appleScriptSender } from './sender.ts';
+import { appleScriptSender, probeAutomation } from './sender.ts';
 import type { IMessageSender } from './sender.ts';
 
 export interface IMessageOptions {
@@ -28,7 +37,6 @@ export class IMessageChannel implements Channel {
     // iMessage has no practical length limit, and AppleScript can't show a typing bubble.
     typingIndicator: false,
     groups: true,
-    canInitiate: true,
   };
 
   readonly #options: IMessageOptions;
@@ -68,6 +76,29 @@ export class IMessageChannel implements Channel {
     this.#reader = undefined;
   }
 
+  async check(): Promise<CheckResult[]> {
+    if (process.platform !== 'darwin' && !this.#options.dbPath) {
+      return [{ name: 'iMessage', ok: false, detail: 'iMessage only runs on macOS.' }];
+    }
+    const results: CheckResult[] = [];
+    try {
+      new ChatDbReader(this.#options.dbPath ?? DEFAULT_CHAT_DB).close();
+      results.push({ name: 'iMessage: read Messages (Full Disk Access)', ok: true });
+    } catch (error) {
+      results.push({ name: 'iMessage: read Messages (Full Disk Access)', ok: false, detail: (error as Error).message });
+    }
+    // Only the default AppleScript sender needs Automation permission.
+    if (!this.#options.sender) {
+      const problem = await probeAutomation();
+      results.push(
+        problem
+          ? { name: 'iMessage: send messages (Automation)', ok: false, detail: problem.message }
+          : { name: 'iMessage: send messages (Automation)', ok: true },
+      );
+    }
+    return results;
+  }
+
   async send({ thread, text }: OutboundMessage): Promise<SentMessage> {
     // Recorded before sending: the echo can hit chat.db before osascript returns.
     this.#echoes.record(thread.id, text);
@@ -79,6 +110,17 @@ export class IMessageChannel implements Channel {
     }
     // AppleScript doesn't return the new message's guid.
     return { id: `imessage-local-${randomUUID()}`, channel: this.name, threadId: thread.id };
+  }
+
+  /**
+   * Text a phone number or Apple ID email over iMessage. AppleScript can't confirm delivery,
+   * and newer macOS may file the person's reply under an "any;-;" chat id (a separate thread).
+   */
+  async sendNew({ to, text, template }: NewMessage): Promise<{ sent: SentMessage; thread: Thread }> {
+    if (template) throw new Error('iMessage has no message templates; send text');
+    if (!text) throw new Error('iMessage needs text to send');
+    const thread: Thread = { id: `iMessage;-;${to}`, channel: this.name, isGroup: false };
+    return { sent: await this.send({ thread, text }), thread };
   }
 
   /** Read and deliver new messages now instead of waiting for the next poll. */

@@ -24,7 +24,7 @@ class FakeChannel implements Channel {
 
   constructor(
     name = 'fake',
-    capabilities: ChannelCapabilities = { typingIndicator: false, groups: true, canInitiate: true },
+    capabilities: ChannelCapabilities = { typingIndicator: false, groups: true },
     failStart = false,
   ) {
     this.name = name;
@@ -153,7 +153,7 @@ describe('Agent', () => {
   });
 
   it('splits replies longer than the channel limit', async () => {
-    const channel = new FakeChannel('short', { maxTextLength: 20, typingIndicator: false, groups: false, canInitiate: true });
+    const channel = new FakeChannel('short', { maxTextLength: 20, typingIndicator: false, groups: false });
     const agent = new Agent({ channels: [channel], debounceMs: 0 });
     agent.on('message', (ctx) => ctx.reply('First sentence here. Second sentence here.'));
     await agent.start();
@@ -221,7 +221,7 @@ describe('Agent', () => {
   });
 
   it('gives the handler conversation history, with replies stored whole', async () => {
-    const channel = new FakeChannel('short', { maxTextLength: 20, typingIndicator: false, groups: false, canInitiate: true });
+    const channel = new FakeChannel('short', { maxTextLength: 20, typingIndicator: false, groups: false });
     const agent = new Agent({ channels: [channel], debounceMs: 0 });
     const seen: string[][] = [];
     agent.on('message', async (ctx) => {

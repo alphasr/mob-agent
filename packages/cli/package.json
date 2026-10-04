@@ -1,0 +1,58 @@
+{
+  "name": "textagent",
+  "version": "0.1.0",
+  "description": "CLI for textagent: create an agent you can text, run it, and diagnose its setup.",
+  "keywords": [
+    "ai",
+    "agent",
+    "cli",
+    "imessage",
+    "whatsapp",
+    "telegram",
+    "email",
+    "chatbot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alphasr/textagent.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/alphasr/textagent#readme",
+  "bugs": "https://github.com/alphasr/textagent/issues",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.8.1",
+    "@textagent/core": "0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "textagent": "./dist/bin.js"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@textagent/email": "^0.1.0",
+    "@textagent/imessage": "^0.1.0",
+    "@textagent/telegram": "^0.1.0",
+    "@textagent/webhook": "^0.1.0",
+    "@textagent/whatsapp": "^0.1.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/main.d.ts",
+      "default": "./dist/main.js"
+    }
+  }
+}

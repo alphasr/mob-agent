@@ -1,0 +1,43 @@
+{
+  "name": "@textagent/whatsapp",
+  "version": "0.1.0",
+  "description": "WhatsApp channel for textagent, using the official WhatsApp Cloud API.",
+  "keywords": [
+    "ai",
+    "agent",
+    "whatsapp",
+    "whatsapp-cloud-api",
+    "chatbot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alphasr/textagent.git",
+    "directory": "packages/whatsapp"
+  },
+  "homepage": "https://github.com/alphasr/textagent/tree/main/packages/whatsapp#readme",
+  "bugs": "https://github.com/alphasr/textagent/issues",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@textagent/core": "0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -140,3 +140,32 @@ describe('IMessageChannel with Agent', () => {
     assert.deepEqual(sent, ['You said: You said: one']);
   });
 });
+
+describe('IMessageChannel proactive messages', () => {
+  it('texts a number directly, and ignores the echo of that text', async () => {
+    const fake = new FakeChatDb();
+    fake.chat('iMessage;-;+15550009', 45);
+    const sent: Array<[string, string]> = [];
+    const channel = new IMessageChannel({ dbPath: fake.path, pollIntervalMs: 60_000, sender: async (t, text) => void sent.push([t.id, text]) });
+    const store = new MemoryStore();
+    await store.setState('imessage', 'cursor', '0');
+    const agent = new Agent({ channels: [channel], store, debounceMs: 0 });
+    const handled: string[] = [];
+    agent.on('message', (ctx) => void handled.push(ctx.text));
+    await agent.start();
+    try {
+      const [message] = await agent.send({ channel: 'imessage', to: '+15550009', text: 'Your table is ready' });
+      assert.equal(message?.threadId, 'iMessage;-;+15550009');
+      assert.deepEqual(sent, [['iMessage;-;+15550009', 'Your table is ready']]);
+      assert.equal(dmRecipient({ id: message!.threadId, channel: 'imessage', isGroup: false }), '+15550009', 'AppleScript can fall back to the buddy');
+
+      fake.message({ text: 'Your table is ready', from: '+15550009', chat: 'iMessage;-;+15550009' });
+      await channel.pollNow();
+      await agent.idle();
+      assert.deepEqual(handled, [], 'echo of our own proactive text is not answered');
+    } finally {
+      await agent.stop();
+      fake.cleanup();
+    }
+  });
+});
