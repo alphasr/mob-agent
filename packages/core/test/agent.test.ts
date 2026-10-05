@@ -164,6 +164,33 @@ describe('Agent', () => {
     assert.ok(channel.sent.every((m) => m.text.length <= 20));
   });
 
+  it('still replies when the typing indicator fails, and reports the failure', async () => {
+    const channel = new FakeChannel('typing', { typingIndicator: true, groups: false });
+    const typingChannel = Object.assign(channel, {
+      sendTyping: async () => {
+        throw new Error('429 Too Many Requests');
+      },
+    });
+    const agent = new Agent({ channels: [typingChannel], debounceMs: 0 });
+    const errors: TimedAgentEvent[] = [];
+    agent.on('event', (e) => {
+      if (e.type === 'channel.error' || e.type === 'handler.error') errors.push(e);
+    });
+    agent.on('message', async (ctx) => {
+      await ctx.typing();
+      await ctx.reply('still here');
+    });
+    await agent.start();
+    await channel.deliver('hi');
+    await agent.stop();
+
+    assert.deepEqual(channel.sent.map((m) => m.text), ['still here']);
+    assert.deepEqual(
+      errors.map((e) => [e.type, e.type === 'channel.error' && (e.error as Error).message]),
+      [['channel.error', '429 Too Many Requests']],
+    );
+  });
+
   it('keeps running after a handler throws, and reports it', async () => {
     const { channel, agent, events } = setup();
     agent.on('message', (ctx) => {

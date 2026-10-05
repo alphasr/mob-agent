@@ -1,9 +1,10 @@
+import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { styleText } from 'node:util';
 import type { CheckResult } from '@textagent/core';
-import { ALLOWED_SENDERS, channelSpec, templateSpec } from './catalog.ts';
+import { ALLOWED_SENDERS, DASHBOARD, channelSpec, needsAllowedSenders, templateSpec } from './catalog.ts';
 import type { EnvVar } from './catalog.ts';
 import { loadProject } from './project.ts';
 import type { Project } from './project.ts';
@@ -50,11 +51,13 @@ export async function runChecks(dir: string): Promise<Section[]> {
     return sections;
   }
 
-  if (project.channels.includes('imessage') && !project.env[ALLOWED_SENDERS.name]) {
+  if (needsAllowedSenders(project) && !project.env[ALLOWED_SENDERS.name]) {
     sections[0]!.results.push({
       name: ALLOWED_SENDERS.name,
       ok: false,
-      detail: 'empty, so anyone texting your Apple ID would get answers',
+      detail: project.channels.includes('imessage')
+        ? 'empty, so anyone texting your Apple ID would get answers'
+        : 'empty; the assistant keeps personal notes, so it refuses to start without it',
       fix: 'List the numbers or emails the agent may answer in .env.',
     });
   }
@@ -68,9 +71,21 @@ export async function runChecks(dir: string): Promise<Section[]> {
 
   const template = templateSpec(project.template)!;
   const templateResults = missingEnv(project, template.env);
-  if (templateResults.length === 0 && project.template === 'claude') templateResults.push(await claudeCheck(project));
+  // Offline checks first; the API key check makes a request and only runs when the rest is in order.
+  if (templateResults.length === 0 && project.template === 'support') templateResults.push(operatorCheck(project));
+  if (templateResults.length === 0 && project.template === 'booking') templateResults.push(await bookingCheck(project));
+  if (templateResults.length === 0 && project.template === 'assistant')
+    templateResults.push(await timezoneCheck(project));
+  const usesClaude = templateSpec(project.template)!.files?.includes('claude.ts');
+  if (templateResults.every((r) => r.ok) && usesClaude) templateResults.push(await claudeCheck(project));
   if (templateResults.length === 0 && project.template === 'webhook') templateResults.push(webhookCheck(project));
   if (template.env.length) sections.push({ title: `${template.label} template`, results: templateResults });
+
+  if (project.dashboard) {
+    const results = missingEnv(project, DASHBOARD.env);
+    if (results.length === 0) results.push(await dashboardCheck(project));
+    sections.push({ title: 'Dashboard', results });
+  }
 
   return sections;
 }
@@ -113,6 +128,52 @@ async function claudeCheck(project: Project): Promise<CheckResult> {
   }
 }
 
+/** Handoffs go out on one of the project's own channels; anything else fails when the first handoff happens. */
+function operatorCheck(project: Project): CheckResult {
+  const channel = project.env.OPERATOR_CHANNEL ?? '';
+  if (!(project.channels as string[]).includes(channel)) {
+    return {
+      name: 'OPERATOR_CHANNEL',
+      ok: false,
+      detail: `"${channel}" is not one of this agent's channels`,
+      fix: `Use one of: ${project.channels.join(', ')}`,
+    };
+  }
+  return { name: 'Handoffs', ok: true, detail: `to ${project.env.OPERATOR_TO} on ${channel}` };
+}
+
+/** Validates booking.config.json with the project's own booking.ts, as the agent does at startup. */
+async function bookingCheck(project: Project): Promise<CheckResult> {
+  try {
+    const mod = await import(pathToFileURL(join(project.dir, 'booking.ts')).href);
+    const load = mod.loadBookingConfig as (json: string) => { timezone: string; slotMinutes: number }; // booking.ts
+    const config = load(await readFile(join(project.dir, 'booking.config.json'), 'utf8'));
+    return { name: 'booking.config.json', ok: true, detail: `${config.slotMinutes}-minute slots, ${config.timezone}` };
+  } catch (error) {
+    return {
+      name: 'booking.config.json',
+      ok: false,
+      detail: (error as Error).message,
+      fix: 'Fix booking.config.json (see the README).',
+    };
+  }
+}
+
+/** Checks TIMEZONE with the project's own time.ts, as the agent does at startup. */
+async function timezoneCheck(project: Project): Promise<CheckResult> {
+  const timezone = project.env.TIMEZONE ?? '';
+  const mod = await import(pathToFileURL(join(project.dir, 'time.ts')).href);
+  const isTimezone = mod.isTimezone as (name: string) => boolean; // time.ts
+  return isTimezone(timezone)
+    ? { name: 'TIMEZONE', ok: true, detail: timezone }
+    : {
+        name: 'TIMEZONE',
+        ok: false,
+        detail: `"${timezone}" is not a timezone`,
+        fix: 'Use an IANA name like Europe/London.',
+      };
+}
+
 function webhookCheck(project: Project): CheckResult {
   const url = project.env.WEBHOOK_URL ?? '';
   const secret = project.env.WEBHOOK_SECRET ?? '';
@@ -130,6 +191,37 @@ function webhookCheck(project: Project): CheckResult {
     return { name: 'WEBHOOK_SECRET', ok: false, detail: 'shorter than 32 characters', fix: 'Use a long random value.' };
   }
   return { name: 'Webhook settings', ok: true, detail: parsed.origin };
+}
+
+/**
+ * Builds the exporter the agent would build, which validates the URL and hash secret without
+ * sending anything (nothing is buffered yet, so `close()` has nothing to flush).
+ */
+async function dashboardCheck(project: Project): Promise<CheckResult> {
+  let exporter: (options: Record<string, unknown>) => { close(): Promise<void> };
+  try {
+    const mod = await importFromProject(project.dir, DASHBOARD.packageName);
+    exporter = mod.exporter as typeof exporter; // @textagent/cloud's exporter(); its own types define the options
+  } catch (error) {
+    const detail = (error as Error).message;
+    return { name: DASHBOARD.packageName, ok: false, detail, fix: 'Run `npm install` in the project.' };
+  }
+  try {
+    await exporter({
+      url: project.env.TEXTAGENT_INGEST_URL,
+      key: project.env.TEXTAGENT_KEY,
+      hashSecret: project.env.TEXTAGENT_HASH_SECRET,
+    }).close();
+  } catch (error) {
+    return {
+      name: 'Dashboard settings',
+      ok: false,
+      detail: (error as Error).message.replace(/^exporter\(\): /, ''),
+      fix: 'Fix TEXTAGENT_INGEST_URL / TEXTAGENT_HASH_SECRET in .env.',
+    };
+  }
+  // missingEnv ruled out an empty URL, and exporter() just parsed it.
+  return { name: 'Dashboard settings', ok: true, detail: new URL(project.env.TEXTAGENT_INGEST_URL!).origin };
 }
 
 /** Import a package as installed in the project, so checks use the project's own versions. */

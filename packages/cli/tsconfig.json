@@ -5,5 +5,11 @@
     "outDir": "dist"
   },
   "include": ["src"],
-  "references": [{ "path": "../core" }]
+  "references": [
+    { "path": "../core" },
+    { "path": "../email" },
+    { "path": "../imessage" },
+    { "path": "../telegram" },
+    { "path": "../whatsapp" }
+  ]
 }

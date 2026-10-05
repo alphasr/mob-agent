@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { relative } from 'node:path';
 import * as p from '@clack/prompts';
-import { ALLOWED_SENDERS, CHANNELS, TEMPLATES, channelSpec, templateSpec } from './catalog.ts';
+import { ALLOWED_SENDERS, CHANNELS, TEMPLATES, channelSpec, needsAllowedSenders, templateSpec } from './catalog.ts';
 import type { ChannelName, EnvVar, TemplateName } from './catalog.ts';
 import { envVarsFor, writeProject } from './scaffold.ts';
 import type { ProjectPlan } from './scaffold.ts';
@@ -10,6 +10,8 @@ export interface CreateOptions {
   dir?: string;
   channels?: string;
   template?: string;
+  /** Send traces to a dashboard. Asked when interactive; default false. */
+  dashboard?: boolean;
   /** Accept defaults; never prompt. Implied when stdin isn't a terminal. */
   yes?: boolean;
   force?: boolean;
@@ -31,10 +33,27 @@ export async function create(options: CreateOptions): Promise<void> {
       : 'my-agent');
   const channels = await pickChannels(options.channels, interactive, platform);
   const template = await pickTemplate(options.template, interactive);
+  const dashboard =
+    options.dashboard ??
+    (interactive
+      ? await ask(
+          p.confirm({
+            message: 'Send traces (timings, tokens, cost; no message text) to a textagent dashboard?',
+            initialValue: false,
+          }),
+        )
+      : false);
 
-  const plan: ProjectPlan = { dir, channels, template, env: {}, ...(options.link && { link: options.link }) };
+  const plan: ProjectPlan = {
+    dir,
+    channels,
+    template,
+    ...(dashboard && { dashboard }),
+    env: {},
+    ...(options.link && { link: options.link }),
+  };
   for (const v of envVarsFor(plan)) {
-    const required = v === ALLOWED_SENDERS && channels.includes('imessage');
+    const required = v === ALLOWED_SENDERS && needsAllowedSenders(plan);
     plan.env[v.name] = interactive ? await askEnv(v, required) : (v.generate?.() ?? v.defaultValue ?? '');
   }
 
@@ -54,7 +73,9 @@ export async function create(options: CreateOptions): Promise<void> {
     }
   }
 
-  const missing = envVarsFor(plan).filter((v) => !plan.env[v.name] && v !== ALLOWED_SENDERS);
+  const missing = envVarsFor(plan).filter(
+    (v) => !plan.env[v.name] && (v !== ALLOWED_SENDERS || needsAllowedSenders(plan)),
+  );
   const next = [
     `cd ${shown}`,
     ...(missing.length ? [`fill in ${missing.map((v) => v.name).join(', ')} in .env`] : []),

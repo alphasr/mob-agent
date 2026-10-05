@@ -5,3 +5,5 @@ dist/
 *.sqlite
 .DS_Store
 .tmp/
+.next/
+next-env.d.ts

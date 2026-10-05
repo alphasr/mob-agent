@@ -81,7 +81,7 @@ export interface MessageContext {
   text: string;
   /** Reply in the same thread. Text over the channel's limit is split into several messages. */
   reply(text: string): Promise<SentMessage[]>;
-  /** Show a typing indicator where the channel supports one; a no-op elsewhere. */
+  /** Show a typing indicator where the channel supports one; a no-op elsewhere. Never throws: failures are `channel.error` events. */
   typing(): Promise<void>;
   /** The latest `limit` messages in this thread, oldest first, including this turn. Default limit: 20. */
   history(limit?: number): Promise<HistoryEntry[]>;
@@ -313,8 +313,12 @@ export class Agent {
         return sent;
       },
       typing: async () => {
-        if (channel.capabilities.typingIndicator && channel.sendTyping) {
+        if (!channel.capabilities.typingIndicator || !channel.sendTyping) return;
+        // Best effort: a failed indicator is reported, never allowed to cost the reply.
+        try {
           await channel.sendTyping(message.thread);
+        } catch (error) {
+          this.#emit({ type: 'channel.error', channel: channel.name, error });
         }
       },
       history: (limit = 20) => this.#store.getHistory(channel.name, message.thread.id, limit),

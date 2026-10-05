@@ -1,0 +1,4 @@
+# https://dash.example.com gets a Let's Encrypt certificate automatically; http://localhost serves plain HTTP.
+{$PUBLIC_URL} {
+	reverse_proxy dashboard:3000
+}

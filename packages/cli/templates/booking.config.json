@@ -1,0 +1,15 @@
+{
+  "timezone": "Europe/London",
+  "slotMinutes": 30,
+  "daysAhead": 14,
+  "minNoticeMinutes": 60,
+  "maxBookingsPerPerson": 3,
+  "hours": {
+    "mon": ["09:00-17:00"],
+    "tue": ["09:00-17:00"],
+    "wed": ["09:00-17:00"],
+    "thu": ["09:00-12:00", "13:00-19:00"],
+    "fri": ["09:00-17:00"],
+    "sat": ["10:00-14:00"]
+  }
+}

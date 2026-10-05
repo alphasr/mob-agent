@@ -1,0 +1,38 @@
+{
+  "name": "@textagent/dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The textagent dashboard: ingests traces from exporter() and shows them. Self-hostable.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "test": "node --test test/*.test.ts",
+    "create-key": "node --env-file-if-exists=.env scripts/create-key.ts"
+  },
+  "dependencies": {
+    "@textagent/cloud": "0.1.0",
+    "@textagent/core": "0.1.0",
+    "better-auth": "^1.7.7",
+    "drizzle-orm": "^0.45.3",
+    "next": "^16.3.8",
+    "pg": "^8.23.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "drizzle-kit": "^0.31.11"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

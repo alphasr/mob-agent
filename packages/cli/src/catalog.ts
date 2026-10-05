@@ -25,7 +25,7 @@ export interface EnvVar {
 }
 
 export type ChannelName = 'telegram' | 'whatsapp' | 'email' | 'imessage';
-export type TemplateName = 'echo' | 'claude' | 'webhook';
+export type TemplateName = 'echo' | 'claude' | 'support' | 'booking' | 'assistant' | 'webhook';
 
 /** Loosely typed module namespace from the project's own node_modules. */
 type ChannelModule = Record<string, unknown>;
@@ -167,7 +167,18 @@ export interface TemplateSpec {
   hint: string;
   env: EnvVar[];
   dependencies: Record<string, string>;
+  /** Files copied into the project unchanged, from packages/cli/templates/. */
+  files?: string[];
 }
+
+const ANTHROPIC_API_KEY: EnvVar = {
+  name: 'ANTHROPIC_API_KEY',
+  prompt: 'Anthropic API key',
+  secret: true,
+  hint: 'Create one at platform.claude.com → API keys.',
+};
+
+const CLAUDE_SDK = { '@anthropic-ai/sdk': '^0.131.0' };
 
 export const TEMPLATES: TemplateSpec[] = [
   { name: 'echo', label: 'Echo', hint: 'replies with what you sent; no API key needed', env: [], dependencies: {} },
@@ -175,15 +186,53 @@ export const TEMPLATES: TemplateSpec[] = [
     name: 'claude',
     label: 'Claude assistant',
     hint: 'answers with Claude; needs an Anthropic API key',
+    env: [ANTHROPIC_API_KEY],
+    dependencies: CLAUDE_SDK,
+    files: ['claude.ts'],
+  },
+  {
+    name: 'support',
+    label: 'Customer support',
+    hint: 'answers from your knowledge base, hands over to a person when needed',
     env: [
+      ANTHROPIC_API_KEY,
       {
-        name: 'ANTHROPIC_API_KEY',
-        prompt: 'Anthropic API key',
-        secret: true,
-        hint: 'Create one at platform.claude.com → API keys.',
+        name: 'OPERATOR_CHANNEL',
+        prompt: 'Channel where you receive handoffs (telegram, whatsapp, email or imessage)',
+        hint: 'When the agent hands a conversation over, it sends you a summary on this channel.',
+      },
+      {
+        name: 'OPERATOR_TO',
+        prompt: 'Your address on that channel (Telegram chat ID, phone number or email)',
+        hint: 'Message the agent once yourself: the log shows your sender ID.',
       },
     ],
-    dependencies: { '@anthropic-ai/sdk': '^0.131.0' },
+    dependencies: CLAUDE_SDK,
+    files: ['claude.ts', 'support.ts', 'knowledge.md'],
+  },
+  {
+    name: 'booking',
+    label: 'Booking',
+    hint: 'books appointments from your opening hours and sends reminders',
+    env: [ANTHROPIC_API_KEY],
+    dependencies: CLAUDE_SDK,
+    files: ['claude.ts', 'time.ts', 'booking.ts', 'booking.config.json'],
+  },
+  {
+    name: 'assistant',
+    label: 'Personal assistant',
+    hint: 'notes and reminders for you alone',
+    env: [
+      ANTHROPIC_API_KEY,
+      {
+        name: 'TIMEZONE',
+        prompt: 'Your timezone',
+        generate: () => Intl.DateTimeFormat().resolvedOptions().timeZone,
+        hint: "An IANA name like Europe/London; reminder times are read in it. Defaults to this computer's.",
+      },
+    ],
+    dependencies: CLAUDE_SDK,
+    files: ['claude.ts', 'time.ts', 'assistant.ts'],
   },
   {
     name: 'webhook',
@@ -208,12 +257,47 @@ export const TEMPLATES: TemplateSpec[] = [
   },
 ];
 
+/** Optional: send turn traces to a textagent dashboard with `@textagent/cloud`. */
+export const DASHBOARD = {
+  packageName: '@textagent/cloud',
+  env: [
+    {
+      name: 'TEXTAGENT_INGEST_URL',
+      prompt: 'Dashboard URL',
+      hint: 'https://, or http://localhost for a dashboard running on this machine.',
+    },
+    {
+      name: 'TEXTAGENT_KEY',
+      prompt: 'Dashboard ingestion key',
+      secret: true,
+      hint: "Your project's settings page in the dashboard.",
+    },
+    {
+      name: 'TEXTAGENT_HASH_SECRET',
+      prompt: 'Hash secret for sender IDs',
+      secret: true,
+      generate: () => randomBytes(32).toString('base64url'),
+      hint: 'Hashes phone numbers and emails before they leave this machine. Keep it private, and the same everywhere this agent runs.',
+    },
+  ] satisfies EnvVar[],
+  code: `exporter({
+  url: env('TEXTAGENT_INGEST_URL'),
+  key: env('TEXTAGENT_KEY'),
+  hashSecret: env('TEXTAGENT_HASH_SECRET'),
+})`,
+};
+
 /** Who may talk to the agent; required for iMessage, which runs on a personal Apple ID. */
 export const ALLOWED_SENDERS: EnvVar = {
   name: 'ALLOWED_SENDERS',
   prompt: 'Who may message the agent? (comma-separated phone numbers, emails or Telegram user IDs; empty = anyone)',
   hint: 'Run the agent once and message it: the log shows each sender ID.',
 };
+
+/** iMessage runs on a personal Apple ID and the assistant keeps personal notes: both must name who may write. */
+export function needsAllowedSenders(plan: { channels: readonly string[]; template: string }): boolean {
+  return plan.channels.includes('imessage') || plan.template === 'assistant';
+}
 
 export function channelSpec(name: string): ChannelSpec | undefined {
   return CHANNELS.find((c) => c.name === name);

@@ -8,6 +8,7 @@ export interface Project {
   dir: string;
   channels: ChannelName[];
   template: TemplateName;
+  dashboard: boolean;
   entry: string;
   /** .env merged under the real environment (real env wins, as with `node --env-file`). */
   env: Record<string, string | undefined>;
@@ -15,7 +16,7 @@ export interface Project {
 
 /** Load the textagent project in `dir`, or explain why it isn't one. */
 export async function loadProject(dir: string): Promise<Project> {
-  let pkg: { textagent?: { channels?: unknown; template?: unknown; entry?: unknown } };
+  let pkg: { textagent?: { channels?: unknown; template?: unknown; dashboard?: unknown; entry?: unknown } };
   try {
     pkg = JSON.parse(await readFile(join(dir, 'package.json'), 'utf8'));
   } catch {
@@ -38,5 +39,12 @@ export async function loadProject(dir: string): Promise<Project> {
   } catch {
     // No .env: doctor reports each missing variable.
   }
-  return { dir, channels, template, entry, env: { ...fileEnv, ...process.env } };
+  return {
+    dir,
+    channels,
+    template,
+    dashboard: config.dashboard === true,
+    entry,
+    env: { ...fileEnv, ...process.env },
+  };
 }

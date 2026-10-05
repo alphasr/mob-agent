@@ -8,7 +8,8 @@ const HELP = `textagent: build agents people can text
 Usage:
   textagent create [dir]   Create a new agent project
       --channels <list>      telegram,whatsapp,email,imessage
-      --template <name>      echo | claude | webhook
+      --template <name>      echo | claude | support | booking | assistant | webhook
+      --dashboard            Send traces to a textagent dashboard
       --yes                  Use defaults; don't ask questions
       --force                Write into a non-empty directory
       --no-install           Skip installing dependencies
@@ -31,6 +32,7 @@ export async function main(argv: string[]): Promise<number> {
     options: {
       channels: { type: 'string' },
       template: { type: 'string' },
+      dashboard: { type: 'boolean' },
       yes: { type: 'boolean', short: 'y' },
       force: { type: 'boolean' },
       'no-install': { type: 'boolean' },
@@ -48,6 +50,7 @@ export async function main(argv: string[]): Promise<number> {
           ...(rest[0] && { dir: rest[0] }),
           ...(values.channels !== undefined && { channels: values.channels }),
           ...(values.template !== undefined && { template: values.template }),
+          ...(values.dashboard !== undefined && { dashboard: values.dashboard }),
           ...(values.link !== undefined && { link: values.link }),
           yes: values.yes ?? false,
           force: values.force ?? false,

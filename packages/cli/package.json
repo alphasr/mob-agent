@@ -21,7 +21,8 @@
   "bugs": "https://github.com/alphasr/textagent/issues",
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "templates"
   ],
   "scripts": {
     "build": "tsc -b",

@@ -1,0 +1,10 @@
+# The dashboard image is built from the repo root (it needs the workspace packages).
+.git
+**/node_modules
+**/.next
+**/dist
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+!**/.env.example
+.tmp

@@ -32,6 +32,23 @@ agent.on('event', (e) => console.log(e.at.toISOString(), e.type));
 await agent.start();
 ```
 
+## Templates
+
+`npm create textagent` asks which one to start from (or pass `--template <name>`). Each generates a small
+`agent.ts` plus files that are yours to edit.
+
+| Template    | What it does                                                                   | Needs                                  |
+| ----------- | ------------------------------------------------------------------------------ | -------------------------------------- |
+| `echo`      | Replies with what you sent                                                     | nothing                                |
+| `claude`    | Answers with Claude, through a tool loop that traces every model and tool call | Anthropic API key                      |
+| `support`   | Answers from `knowledge.md`; hands a conversation to a person when it can't    | API key, a channel and address for you |
+| `booking`   | Books slots from `booking.config.json`; reminds people 24 hours before         | API key                                |
+| `assistant` | Notes and reminders for you alone                                              | API key, `TIMEZONE`, your sender ID    |
+| `webhook`   | Forwards each turn to your own server, in any language                         | your server's URL                      |
+
+In the Claude templates, tools act only for the person texting: nobody can read or cancel someone else's
+booking or notes, and handoffs and reminders go only where the code sends them.
+
 ## What the core handles for every channel
 
 - **Dedupe**: webhook retries and restarts never produce a second reply.
@@ -53,6 +70,13 @@ await agent.start();
 | `@textagent/email`    | Works (IMAP + SMTP; Gmail helper)                                  |
 | `@textagent/webhook`  | Works: turns POSTed to your server (any language), signed replies  |
 | `textagent` CLI       | Works: `npm create textagent`, `textagent dev`, `textagent doctor` |
+| `@textagent/cloud`    | Works: sends turn traces to the dashboard; ids hashed, no text     |
+
+## Dashboard
+
+`apps/dashboard` shows turns, timings, token usage and cost per project, with GitHub sign-in. Create a project
+with `--dashboard` to send traces to it, or add `exporter()` from `@textagent/cloud` yourself. It runs on Vercel
+with Postgres, or self-hosted with Docker Compose: see [SELF_HOSTING.md](apps/dashboard/SELF_HOSTING.md).
 
 ## Writing a channel
 

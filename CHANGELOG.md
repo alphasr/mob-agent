@@ -35,3 +35,12 @@ while it is 0.x, minor versions may contain breaking changes.
   (templates outside the 24-hour window). `ChannelCapabilities.canInitiate` removed.
 - `@textagent/core`: optional `Channel.check()`, `logEvents()` readable event log, `text` on `message.sent`.
 - `@textagent/core`: `serve()`/`readBody()` HTTP helpers and `signBody()`/`verifyWebhook()` request signing.
+- `@textagent/cloud`: `exporter()` batches turn traces to a dashboard, hashing phone numbers and emails with a
+  local secret and leaving message text out unless `includeText` is set; retries with backoff, `close()` flushes.
+- Dashboard (`apps/dashboard`, not published): ingestion API, projects with GitHub sign-in, members and keys,
+  overview charts, turn waterfalls and conversations; 30-day retention; self-hosting with Docker Compose.
+- `textagent` CLI: `create --dashboard`; templates `support` (knowledge base + handoff to a person), `booking`
+  (slots, bookings and reminders) and `assistant` (notes and reminders for one owner). Claude templates ship a
+  `claude.ts` tool loop (`claude-opus-5-5`, strict tools, traced model and tool calls).
+- `@textagent/core`: `ctx.typing()` no longer throws; a failed typing indicator is a `channel.error` event and the
+  turn goes on to reply (before, a rate-limited or failed indicator cost the whole reply).
