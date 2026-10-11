@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@textagent/core": "0.1.0",
-    "imapflow": "^2.2.5",
+    "imapflow": "^2.2.10",
     "mailparser": "^3.9.35",
     "nodemailer": "^10.0.14"
   },
