@@ -43,7 +43,7 @@
     "textagent": "./dist/bin.js"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.131.0",
+    "@anthropic-ai/sdk": "^0.132.1",
     "@textagent/email": "^0.1.0",
     "@textagent/imessage": "^0.1.0",
     "@textagent/telegram": "^0.1.0",
