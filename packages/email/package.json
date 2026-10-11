@@ -34,7 +34,7 @@
   "dependencies": {
     "@textagent/core": "0.1.0",
     "imapflow": "^2.2.5",
-    "mailparser": "^3.9.35",
+    "mailparser": "^3.9.36",
     "nodemailer": "^10.0.14"
   },
   "license": "MIT",
